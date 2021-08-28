@@ -61,36 +61,45 @@ app.post('/send-gps-data', (req, res) => {
 // get-gps-data?userId=1&startDate=2021-08-27&endDate=2021-08-29
 app.get('/get-gps-data', (req, res) => {
   const userId = req.query.userId;
-  const startDate = req.query.startDate ? moment(req.query.startDate).format() : false;
-  const endDate = req.query.endDate ? moment(req.query.endDate).format() : false;
+  const startDate = req.query.startDate
+    ? moment(req.query.startDate).format()
+    : false;
+  const endDate = req.query.endDate
+    ? moment(req.query.endDate).format()
+    : false;
   knex('gps_coordinates')
-  .select('latitude', 'longitude')
-  .where('id', userId)
-  .modify(function (queryBuilder) {
-    if (startDate) {
-      queryBuilder.where('created_at', '>=', startDate);
-    }
-  })
-  .modify(function (queryBuilder) {
-    if (endDate) {
-      queryBuilder.where('created_at', '<=', endDate);
-    }
-  })
-  .then((data) => {
-    res.status(200).send(data);
-    /* 
-    Output:
-    */
-    // [
-    //   {
-    //       "latitude": 40.741894,
-    //       "longitude": -73.98931
-    //   }
-    // ]
-  })
-  .catch((err) => {
-    res.status(500).send(err);
-  });
+    .select('latitude', 'longitude')
+    .where('id', userId)
+    .modify(function (queryBuilder) {
+      if (startDate) {
+        queryBuilder.where('created_at', '>=', startDate);
+      }
+    })
+    .modify(function (queryBuilder) {
+      if (endDate) {
+        queryBuilder.where('created_at', '<=', endDate);
+      }
+    })
+    .then((data) => {
+      const gpsArr = data.map((i) => {
+        return { gps: `${i.latitude},${i.longitude}` };
+      });
+      res.status(200).send(gpsArr);
+      /* 
+      Output:
+      */
+      // [
+      //   {
+      //       "gps": "40.741894,-73.98931"
+      //   },
+      //   {
+      //       "gps": "40.741894,-73.98931"
+      //   }
+      // ]
+    })
+    .catch((err) => {
+      res.status(500).send(err);
+    });
 });
 
 app.listen(PORT, () => {
